@@ -37,6 +37,17 @@
             font-size: 16px;
         }
 
+        .search-group {
+            margin-bottom: 15px;
+        }
+
+        .search-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85em;
+            color: #555;
+        }
+
         .parts-list {
             display: grid;
             gap: 15px;
@@ -160,6 +171,15 @@
             border-radius: 16px;
             font-size: 0.8em;
         }
+
+        .search-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .search-row .search-group {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -186,7 +206,18 @@
             <option value="Болты и гайки">Болты и гайки</option>
             <option value="Датчики">Датчики</option>
         </select>
-        <input type="text" id="searchInput" placeholder="Поиск по названию, артикулу, заметкам или моделям автомобиля...">
+
+        <!-- Две поисковые строки -->
+        <div class="search-row">
+            <div class="search-group">
+                <label>🔍 Основной поиск</label>
+                <input type="text" id="searchInput" placeholder="Название, артикул, заметки, модель автомобиля...">
+            </div>
+            <div class="search-group">
+                <label>⚡ Уточняющий фильтр (необязательный)</label>
+                <input type="text" id="refineInput" placeholder="Введите для уточнения...">
+            </div>
+        </div>
     </div>
 
     <div class="parts-list" id="partsContainer"></div>
@@ -216,6 +247,7 @@
                 {code: '2190', name: '2190 Granta'},
                 {code: 'XRAY', name: 'XRAY'}
             ],
+
 
             // ВСЕ ВАШИ ЗАПЧАСТИ (полный массив)
             parts: [
@@ -4185,7 +4217,7 @@
                 }
             ],
 
-            // Справочник двигателей
+             // Справочник двигателей
             engines: [
                 { code: "2101", name: "1.2 л, 64 л.с., карбюратор", models: ["2101", "2102"] },
                 { code: "2103", name: "1.5 л, 77 л.с., карбюратор", models: ["2103", "2106"] },
@@ -4208,12 +4240,37 @@
             });
         }
 
-        // Функция для получения строки со всеми названиями моделей, на которые подходит запчасть
         function getCompatibleModelsString(compatibleCodes) {
             return compatibleCodes.map(code => {
                 const model = database.models.find(m => m.code === code);
                 return model ? model.name : code;
             }).join(' ').toLowerCase();
+        }
+
+        function matchesSearchText(part, searchText) {
+            if (!searchText) return true;
+            const modelsString = getCompatibleModelsString(part.compatible);
+            return part.name.toLowerCase().includes(searchText) ||
+                   part.article.toLowerCase().includes(searchText) ||
+                   (part.notes && part.notes.toLowerCase().includes(searchText)) ||
+                   modelsString.includes(searchText);
+        }
+
+        function filterParts() {
+            const selectedModel = document.getElementById('modelSelect').value;
+            const selectedCategory = document.getElementById('categorySelect').value;
+            const mainSearch = document.getElementById('searchInput').value.toLowerCase().trim();
+            const refineSearch = document.getElementById('refineInput').value.toLowerCase().trim();
+
+            const filtered = database.parts.filter(part => {
+                const matchesModel = !selectedModel || part.compatible.includes(selectedModel);
+                const matchesCategory = !selectedCategory || part.category === selectedCategory;
+                const matchesMain = matchesSearchText(part, mainSearch);
+                const matchesRefine = matchesSearchText(part, refineSearch);
+                return matchesModel && matchesCategory && matchesMain && matchesRefine;
+            });
+
+            showParts(filtered);
         }
 
         function showParts(parts) {
@@ -4278,33 +4335,9 @@
         }
 
         let filterTimeout;
-        function filterParts() {
+        function debouncedFilter() {
             clearTimeout(filterTimeout);
-            filterTimeout = setTimeout(() => {
-                const selectedModel = document.getElementById('modelSelect').value;
-                const searchText = document.getElementById('searchInput').value.toLowerCase();
-                const selectedCategory = document.getElementById('categorySelect').value;
-
-                const filtered = database.parts.filter(part => {
-                    // Фильтр по модели (прямая совместимость)
-                    const matchesModel = !selectedModel || part.compatible.includes(selectedModel);
-                    
-                    // Фильтр по категории
-                    const matchesCategory = !selectedCategory || part.category === selectedCategory;
-                    
-                    // Расширенный поиск по тексту: название + артикул + заметки + названия совместимых моделей
-                    const modelsString = getCompatibleModelsString(part.compatible);
-                    const matchesSearch = !searchText || 
-                        part.name.toLowerCase().includes(searchText) || 
-                        part.article.toLowerCase().includes(searchText) ||
-                        (part.notes && part.notes.toLowerCase().includes(searchText)) ||
-                        modelsString.includes(searchText);
-                    
-                    return matchesModel && matchesCategory && matchesSearch;
-                });
-
-                showParts(filtered);
-            }, 300);
+            filterTimeout = setTimeout(filterParts, 300);
         }
 
         function showEngineReference() {
@@ -4324,13 +4357,13 @@
             `).join('');
         }
 
-        // ==================== ЗАПУСК ====================
         document.addEventListener('DOMContentLoaded', () => {
             initFilters();
             showEngineReference();
             document.getElementById('modelSelect').addEventListener('change', filterParts);
-            document.getElementById('searchInput').addEventListener('input', filterParts);
             document.getElementById('categorySelect').addEventListener('change', filterParts);
+            document.getElementById('searchInput').addEventListener('input', debouncedFilter);
+            document.getElementById('refineInput').addEventListener('input', debouncedFilter);
             filterParts();
         });
     </script>
