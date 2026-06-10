@@ -190,15 +190,16 @@
 
         .clear-filters-btn {
             background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 5px;
-            width: 100%;
-        }
+    color: white;
+    border: none;
+    padding: 6px 12px;      /* уменьшенные отступы */
+    border-radius: 20px;    /* скругление, как у чипсов */
+    cursor: pointer;
+    font-size: 13px;
+    width: auto;            /* вместо 100% */
+    margin-top: 5px;
+    display: inline-block;  /* чтобы встала в строку */
+}
 
         .parts-list {
             display: grid;
@@ -4475,7 +4476,7 @@
 
         database = loadDatabase();
 
-        // ==================== КОРЗИНА (localStorage) ====================
+        // ==================== КОРЗИНА ====================
         let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
         function saveCart() {
@@ -4496,7 +4497,7 @@
                 cart.push({ ...part, quantity: 1 });
             }
             saveCart();
-            showToast('Добавлено в корзину');
+            alert('Добавлено в корзину');
         }
 
         function removeFromCart(index) {
@@ -4533,11 +4534,6 @@
             });
             container.innerHTML = html;
             document.getElementById('cartTotal').innerHTML = `Итого: ${total} ₽`;
-        }
-
-        function showToast(msg) {
-            // Простой тост (можно улучшить)
-            alert(msg);
         }
 
         // ==================== СОСТОЯНИЕ ФИЛЬТРОВ В URL ====================
@@ -4577,13 +4573,11 @@
             if (!query) return [];
             const lowerQuery = query.toLowerCase();
             const suggestions = new Set();
-            // Добавляем названия запчастей
             database.parts.forEach(part => {
                 if (part.name.toLowerCase().includes(lowerQuery)) suggestions.add(part.name);
                 if (part.article.toLowerCase().includes(lowerQuery)) suggestions.add(part.article);
                 if (part.notes && part.notes.toLowerCase().includes(lowerQuery)) suggestions.add(part.notes.slice(0, 50));
             });
-            // Добавляем названия моделей
             database.models.forEach(model => {
                 if (model.name.toLowerCase().includes(lowerQuery)) suggestions.add(model.name);
             });
@@ -4602,7 +4596,6 @@
             }
             listElement.innerHTML = suggestions.map(s => `<div class="autocomplete-item">${s}</div>`).join('');
             listElement.style.display = 'block';
-            // Обработчик клика по подсказке
             Array.from(listElement.children).forEach(item => {
                 item.addEventListener('click', () => {
                     inputElement.value = item.innerText;
@@ -4615,10 +4608,7 @@
 
         // ==================== ПОДЕЛИТЬСЯ ====================
         document.getElementById('shareBtn').addEventListener('click', () => {
-            const url = window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
-                alert('Ссылка с текущими фильтрами скопирована!');
-            });
+            navigator.clipboard.writeText(window.location.href).then(() => alert('Ссылка скопирована!'));
         });
 
         // ==================== ОЧИСТКА ФИЛЬТРОВ ====================
@@ -4631,7 +4621,7 @@
             filterParts();
         });
 
-        // ==================== ФУНКЦИИ ФИЛЬТРАЦИИ И ОТРИСОВКИ ====================
+        // ==================== ФИЛЬТРАЦИЯ ====================
         function getCompatibleModelsString(compatibleCodes) {
             return compatibleCodes.map(code => {
                 const model = database.models.find(m => m.code === code);
@@ -4703,7 +4693,6 @@
                     </div>
                     <button class="add-to-cart-btn">🛒 Добавить в корзину</button>
                 `;
-                // Обработчик открытия модального окна
                 card.addEventListener('click', (e) => {
                     if (e.target.classList.contains('add-to-cart-btn')) {
                         e.stopPropagation();
@@ -4717,21 +4706,21 @@
             container.appendChild(fragment);
         }
 
-        // ==================== ПОДРОБНАЯ КАРТОЧКА ТОВАРА (МОДАЛЬНОЕ ОКНО) ====================
+        // ==================== ПОДРОБНАЯ КАРТОЧКА ====================
         function openProductModal(part) {
             const modal = document.getElementById('productModal');
             const modalContent = document.getElementById('modalContent');
             const images = part.images || (part.image ? [part.image] : []);
-            let imageGallery = `<div class="image-container" style="margin-bottom:10px;"><img src="${images[0] || ''}" style="width:100%;" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22150%22%20viewBox%3D%220%200%20200%20150%22%3E%3Crect%20width%3D%22200%22%20height%3D%22150%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Ctext%20x%3D%2235%22%20y%3D%2280%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23999%22%3E%D0%BD%D0%B5%D1%82%20%D1%84%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E'"></div>`;
+            let imageHtml = `<div class="image-container" style="margin-bottom:10px;"><img src="${images[0] || ''}" style="width:100%;" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22150%22%20viewBox%3D%220%200%20200%20150%22%3E%3Crect%20width%3D%22200%22%20height%3D%22150%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Ctext%20x%3D%2235%22%20y%3D%2280%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23999%22%3E%D0%BD%D0%B5%D1%82%20%D1%84%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E'"></div>`;
             if (images.length > 1) {
-                imageGallery += '<div class="thumbnails">';
+                imageHtml += '<div class="thumbnails">';
                 images.forEach(img => {
-                    imageGallery += `<img src="${img}" class="thumbnail" style="width:80px;" onclick="document.getElementById('modalMainImage').src='${img}'">`;
+                    imageHtml += `<img src="${img}" class="thumbnail" style="width:80px;" onclick="document.getElementById('modalMainImage').src='${img}'">`;
                 });
-                imageGallery += '</div>';
+                imageHtml += '</div>';
             }
             modalContent.innerHTML = `
-                <div id="modalMainImageContainer">${imageGallery}</div>
+                <div id="modalMainImageContainer">${imageHtml}</div>
                 <h2>${part.name}</h2>
                 <p><strong>Артикул:</strong> ${part.article}</p>
                 <p><strong>Цена:</strong> ${part.price.toLocaleString('ru-RU')} ₽</p>
@@ -4782,37 +4771,36 @@
             `).join('');
         }
 
-        // Обработка модальных окон
-        const modal = document.getElementById('productModal');
-        const cartModal = document.getElementById('cartModal');
+        // Закрытие модальных окон
+        const productModal = document.getElementById('productModal');
+        const cartModalElem = document.getElementById('cartModal');
         document.querySelectorAll('.close-modal').forEach(btn => {
             btn.addEventListener('click', () => {
-                modal.style.display = 'none';
-                cartModal.style.display = 'none';
+                productModal.style.display = 'none';
+                cartModalElem.style.display = 'none';
             });
         });
         document.getElementById('cartIcon').addEventListener('click', () => {
             renderCartModal();
-            cartModal.style.display = 'block';
+            cartModalElem.style.display = 'block';
         });
         document.getElementById('closeCartModal').addEventListener('click', () => {
-            cartModal.style.display = 'none';
+            cartModalElem.style.display = 'none';
         });
         document.getElementById('clearCartBtn').addEventListener('click', clearCart);
         window.onclick = function(event) {
-            if (event.target === modal) modal.style.display = 'none';
-            if (event.target === cartModal) cartModal.style.display = 'none';
+            if (event.target === productModal) productModal.style.display = 'none';
+            if (event.target === cartModalElem) cartModalElem.style.display = 'none';
         };
 
         // Автодополнение
-        const searchInput = document.getElementById('searchInput');
-        const autocompleteList = document.getElementById('autocompleteList');
-        searchInput.addEventListener('input', () => {
-            const query = searchInput.value;
-            showAutocomplete(searchInput, autocompleteList, query);
+        const searchInputElem = document.getElementById('searchInput');
+        const autocompleteListElem = document.getElementById('autocompleteList');
+        searchInputElem.addEventListener('input', () => {
+            showAutocomplete(searchInputElem, autocompleteListElem, searchInputElem.value);
         });
         document.addEventListener('click', (e) => {
-            if (e.target !== searchInput) autocompleteList.style.display = 'none';
+            if (e.target !== searchInputElem) autocompleteListElem.style.display = 'none';
         });
 
         // Фильтрация с debounce и обновлением URL
@@ -4827,7 +4815,7 @@
 
         document.getElementById('modelSelect').addEventListener('change', debouncedFilter);
         document.getElementById('categorySelect').addEventListener('change', debouncedFilter);
-        searchInput.addEventListener('input', debouncedFilter);
+        searchInputElem.addEventListener('input', debouncedFilter);
         document.getElementById('refineInput').addEventListener('input', debouncedFilter);
 
         loadFiltersFromURL();
