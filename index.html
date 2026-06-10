@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Поиск автозапчастей</title>
+    <title>Автозапчасти — поиск с корзиной и фильтрами</title>
     <style>
         * {
             box-sizing: border-box;
@@ -15,6 +15,103 @@
         body {
             padding: 20px;
             background: #f0f2f5;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark {
+            background: #1a1a2e;
+            color: #eee;
+        }
+
+        body.dark .filters,
+        body.dark .part-card,
+        body.dark .reference-section,
+        body.dark .modal-content,
+        body.dark .cart-modal-content {
+            background: #16213e;
+            color: #eee;
+            border-color: #0f3460;
+        }
+
+        body.dark .model-chip,
+        body.dark .engine-model-chip {
+            background: #0f3460;
+            color: #eee;
+        }
+
+        body.dark .price {
+            color: #4caf50;
+        }
+
+        body.dark .part-notes {
+            background: #2c3e50;
+            color: #f1c40f;
+            border-left-color: #f39c12;
+        }
+
+        /* Тёмная тема для элементов ввода */
+        body.dark select,
+        body.dark input {
+            background: #0f3460;
+            color: #eee;
+            border-color: #2c3e50;
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.8em;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: 0.2s;
+        }
+
+        body.dark .cart-icon {
+            background: #0f3460;
+        }
+
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            font-size: 1.5em;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 40px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .share-btn {
+            cursor: pointer;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 40px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .filters {
@@ -39,6 +136,7 @@
 
         .search-group {
             margin-bottom: 15px;
+            position: relative;
         }
 
         .search-group label {
@@ -46,6 +144,60 @@
             margin-bottom: 5px;
             font-size: 0.85em;
             color: #555;
+        }
+
+        body.dark .search-group label {
+            color: #ccc;
+        }
+
+        /* Автодополнение */
+        .autocomplete-items {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        body.dark .autocomplete-items {
+            background: #0f3460;
+            border-color: #2c3e50;
+        }
+
+        .autocomplete-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        body.dark .autocomplete-item {
+            border-bottom-color: #2c3e50;
+        }
+
+        .autocomplete-item:hover {
+            background: #f0f0f0;
+        }
+
+        body.dark .autocomplete-item:hover {
+            background: #1a2a4a;
+        }
+
+        .clear-filters-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 5px;
+            width: 100%;
         }
 
         .parts-list {
@@ -60,6 +212,12 @@
             padding: 15px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .part-card:hover {
+            transform: translateY(-3px);
         }
 
         .image-container {
@@ -77,29 +235,6 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-        }
-
-        .thumbnails {
-            display: flex;
-            gap: 8px;
-            margin: 10px 0;
-            flex-wrap: wrap;
-        }
-
-        .thumbnail {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-
-        .thumbnail:hover {
-            opacity: 1;
-            border-color: #e74c3c;
         }
 
         .part-models {
@@ -141,11 +276,6 @@
             margin: 20px 0;
         }
 
-        .reference-section h2 {
-            margin-bottom: 15px;
-            color: #2b8a3e;
-        }
-
         .engine-card {
             border: 1px solid #eee;
             border-radius: 8px;
@@ -172,6 +302,78 @@
             font-size: 0.8em;
         }
 
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .cart-modal-content {
+            max-width: 500px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            align-items: center;
+        }
+
+        .cart-item button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .cart-total {
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        .add-to-cart-btn {
+            background: #2b8a3e;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+
         .search-row {
             display: flex;
             gap: 15px;
@@ -183,6 +385,14 @@
     </style>
 </head>
 <body>
+    <div class="header-actions">
+        <div class="cart-icon" id="cartIcon">
+            🛒 <span id="cartCount" class="cart-count">0</span>
+        </div>
+        <div class="theme-toggle" id="themeToggle">🌙</div>
+        <div class="share-btn" id="shareBtn">📤 Поделиться</div>
+    </div>
+
     <div class="filters">
         <select id="modelSelect">
             <option value="">Все модели</option>
@@ -207,17 +417,18 @@
             <option value="Датчики">Датчики</option>
         </select>
 
-        <!-- Две поисковые строки -->
         <div class="search-row">
             <div class="search-group">
                 <label>🔍 Основной поиск</label>
-                <input type="text" id="searchInput" placeholder="Название, артикул, заметки, модель автомобиля...">
+                <input type="text" id="searchInput" placeholder="Название, артикул, заметки, модель...">
+                <div id="autocompleteList" class="autocomplete-items" style="display: none;"></div>
             </div>
             <div class="search-group">
                 <label>⚡ Уточняющий фильтр (необязательный)</label>
                 <input type="text" id="refineInput" placeholder="Введите для уточнения...">
             </div>
         </div>
+        <button id="clearFiltersBtn" class="clear-filters-btn">🧹 Очистить все фильтры</button>
     </div>
 
     <div class="parts-list" id="partsContainer"></div>
@@ -227,26 +438,55 @@
         <div id="engineReference"></div>
     </div>
 
+    <!-- Модальное окно подробной карточки товара -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Модальное окно корзины -->
+    <div id="cartModal" class="modal">
+        <div class="modal-content cart-modal-content">
+            <span class="close-modal" id="closeCartModal">&times;</span>
+            <h2>Корзина</h2>
+            <div id="cartItemsList"></div>
+            <div id="cartTotal" class="cart-total"></div>
+            <button id="clearCartBtn" style="background:#e74c3c; color:white; border:none; padding:10px; border-radius:8px; margin-top:10px; width:100%;">Очистить корзину</button>
+        </div>
+    </div>
+
     <script>
-        // ==================== ДАННЫЕ ====================
-        const database = {
-            models: [
-                {code: '2101-2107', name: '2101-2107'},
-                {code: '2107i', name: '2107i'},
-                {code: '2108-21099', name: '2108-21099'},
-                {code: '2108i-2115', name: '2108i-2115'},
-                {code: '2110-2112', name: '2110-2112'},
-                {code: '2121', name: '2121'},
-                {code: '21214', name: '21214'},
-                {code: '2123', name: '2123'},
-                {code: '1118', name: '1118 Калина'},
-                {code: '2192', name: '2192 Калина 2'},
-                {code: 'Largus', name: 'Ларгус'},
-                {code: '2170', name: 'Приора'},
-                {code: '2180', name: '2180 Веста'},
-                {code: '2190', name: '2190 Granta'},
-                {code: 'XRAY', name: 'XRAY'}
-            ],
+        // ==================== КЕШИРОВАНИЕ ДАННЫХ В localStorage ====================
+        let database;
+
+        // Функция загрузки базы данных (сначала из localStorage, если нет — из дефолтных данных)
+        function loadDatabase() {
+            const cached = localStorage.getItem('autoparts_database');
+            if (cached) {
+                return JSON.parse(cached);
+            } else {
+                // Здесь определите вашу БД (модели, запчасти, двигатели)
+                // Это пример, замените своими данными
+                const defaultDB = {
+                    models: [
+                        {code: '2101-2107', name: '2101-2107'},
+                        {code: '2107i', name: '2107i'},
+                        {code: '2108-21099', name: '2108-21099'},
+                        {code: '2108i-2115', name: '2108i-2115'},
+                        {code: '2110-2112', name: '2110-2112'},
+                        {code: '2121', name: '2121'},
+                        {code: '21214', name: '21214'},
+                        {code: '2123', name: '2123'},
+                        {code: '1118', name: '1118 Калина'},
+                        {code: '2192', name: '2192 Калина 2'},
+                        {code: 'Largus', name: 'Ларгус'},
+                        {code: '2170', name: 'Приора'},
+                        {code: '2180', name: '2180 Веста'},
+                        {code: '2190', name: '2190 Granta'},
+                        {code: 'XRAY', name: 'XRAY'}
+                    ],
 
 
             // ВСЕ ВАШИ ЗАПЧАСТИ (полный массив)
@@ -4219,27 +4459,179 @@
 
              // Справочник двигателей
             engines: [
-                { code: "2101", name: "1.2 л, 64 л.с., карбюратор", models: ["2101", "2102"] },
-                { code: "2103", name: "1.5 л, 77 л.с., карбюратор", models: ["2103", "2106"] },
-                { code: "2106", name: "1.6 л, 80 л.с., карбюратор", models: ["2106", "2121"] },
-                { code: "2108", name: "1.3 л, 69 л.с., карбюратор", models: ["2108", "2109", "21099"] },
-                { code: "2110", name: "1.5 л, 78 л.с., инжектор", models: ["2110", "2111", "2112"] },
-                { code: "126", name: "1.6 л, 98 л.с., инжектор, 16 клапаннов", models: ["2170", "2190"] },
-                { code: "124", name: "1.7 л, 83 л.с., инжектор", models: ["2110", "2108"] }
-            ]
-        };
+                        { code: "2101", name: "1.2 л, 64 л.с., карбюратор", models: ["2101", "2102"] },
+                        { code: "2103", name: "1.5 л, 77 л.с., карбюратор", models: ["2103", "2106"] },
+                        { code: "2106", name: "1.6 л, 80 л.с., карбюратор", models: ["2106", "2121"] },
+                        { code: "2108", name: "1.3 л, 69 л.с., карбюратор", models: ["2108", "2109", "21099"] },
+                        { code: "2110", name: "1.5 л, 78 л.с., инжектор", models: ["2110", "2111", "2112"] },
+                        { code: "126", name: "1.6 л, 98 л.с., инжектор, 16 клапаннов", models: ["2170", "2190"] },
+                        { code: "124", name: "1.7 л, 83 л.с., инжектор", models: ["2110", "2108"] }
+                    ]
+                };
+                localStorage.setItem('autoparts_database', JSON.stringify(defaultDB));
+                return defaultDB;
+            }
+        }
 
-        // ==================== ФУНКЦИИ ====================
-        function initFilters() {
-            const select = document.getElementById('modelSelect');
+        database = loadDatabase();
+
+        // ==================== КОРЗИНА (localStorage) ====================
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cartCount').innerText = count;
+        }
+
+        function addToCart(part) {
+            const existing = cart.find(item => item.article === part.article);
+            if (existing) {
+                existing.quantity++;
+            } else {
+                cart.push({ ...part, quantity: 1 });
+            }
+            saveCart();
+            showToast('Добавлено в корзину');
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            saveCart();
+            renderCartModal();
+        }
+
+        function clearCart() {
+            cart = [];
+            saveCart();
+            renderCartModal();
+        }
+
+        function renderCartModal() {
+            const container = document.getElementById('cartItemsList');
+            if (!container) return;
+            if (cart.length === 0) {
+                container.innerHTML = '<p>Корзина пуста</p>';
+                document.getElementById('cartTotal').innerHTML = '';
+                return;
+            }
+            let html = '';
+            let total = 0;
+            cart.forEach((item, idx) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                html += `
+                    <div class="cart-item">
+                        <div><strong>${item.name}</strong><br>${item.article}<br>${item.price}₽ x ${item.quantity} = ${itemTotal}₽</div>
+                        <button onclick="removeFromCart(${idx})">Удалить</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            document.getElementById('cartTotal').innerHTML = `Итого: ${total} ₽`;
+        }
+
+        function showToast(msg) {
+            // Простой тост (можно улучшить)
+            alert(msg);
+        }
+
+        // ==================== СОСТОЯНИЕ ФИЛЬТРОВ В URL ====================
+        function updateURL() {
+            const params = new URLSearchParams();
+            const model = document.getElementById('modelSelect').value;
+            const category = document.getElementById('categorySelect').value;
+            const search = document.getElementById('searchInput').value;
+            const refine = document.getElementById('refineInput').value;
+            if (model) params.set('model', model);
+            if (category) params.set('cat', category);
+            if (search) params.set('q', search);
+            if (refine) params.set('r', refine);
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.pushState({}, '', newUrl);
+        }
+
+        function loadFiltersFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('model')) document.getElementById('modelSelect').value = params.get('model');
+            if (params.has('cat')) document.getElementById('categorySelect').value = params.get('cat');
+            if (params.has('q')) document.getElementById('searchInput').value = params.get('q');
+            if (params.has('r')) document.getElementById('refineInput').value = params.get('r');
+        }
+
+        // ==================== ТЁМНАЯ ТЕМА ====================
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') document.body.classList.add('dark');
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const newTheme = document.body.classList.contains('dark') ? 'dark' : 'light';
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // ==================== АВТОДОПОЛНЕНИЕ ====================
+        function getSearchSuggestions(query) {
+            if (!query) return [];
+            const lowerQuery = query.toLowerCase();
+            const suggestions = new Set();
+            // Добавляем названия запчастей
+            database.parts.forEach(part => {
+                if (part.name.toLowerCase().includes(lowerQuery)) suggestions.add(part.name);
+                if (part.article.toLowerCase().includes(lowerQuery)) suggestions.add(part.article);
+                if (part.notes && part.notes.toLowerCase().includes(lowerQuery)) suggestions.add(part.notes.slice(0, 50));
+            });
+            // Добавляем названия моделей
             database.models.forEach(model => {
-                const option = document.createElement('option');
-                option.value = model.code;
-                option.textContent = model.name;
-                select.appendChild(option);
+                if (model.name.toLowerCase().includes(lowerQuery)) suggestions.add(model.name);
+            });
+            return Array.from(suggestions).slice(0, 10);
+        }
+
+        function showAutocomplete(inputElement, listElement, query) {
+            if (!query) {
+                listElement.style.display = 'none';
+                return;
+            }
+            const suggestions = getSearchSuggestions(query);
+            if (suggestions.length === 0) {
+                listElement.style.display = 'none';
+                return;
+            }
+            listElement.innerHTML = suggestions.map(s => `<div class="autocomplete-item">${s}</div>`).join('');
+            listElement.style.display = 'block';
+            // Обработчик клика по подсказке
+            Array.from(listElement.children).forEach(item => {
+                item.addEventListener('click', () => {
+                    inputElement.value = item.innerText;
+                    listElement.style.display = 'none';
+                    updateURL();
+                    filterParts();
+                });
             });
         }
 
+        // ==================== ПОДЕЛИТЬСЯ ====================
+        document.getElementById('shareBtn').addEventListener('click', () => {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Ссылка с текущими фильтрами скопирована!');
+            });
+        });
+
+        // ==================== ОЧИСТКА ФИЛЬТРОВ ====================
+        document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+            document.getElementById('modelSelect').value = '';
+            document.getElementById('categorySelect').value = '';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('refineInput').value = '';
+            updateURL();
+            filterParts();
+        });
+
+        // ==================== ФУНКЦИИ ФИЛЬТРАЦИИ И ОТРИСОВКИ ====================
         function getCompatibleModelsString(compatibleCodes) {
             return compatibleCodes.map(code => {
                 const model = database.models.find(m => m.code === code);
@@ -4269,80 +4661,113 @@
                 const matchesRefine = matchesSearchText(part, refineSearch);
                 return matchesModel && matchesCategory && matchesMain && matchesRefine;
             });
-
             showParts(filtered);
         }
 
         function showParts(parts) {
             const container = document.getElementById('partsContainer');
             container.innerHTML = '';
-
             if (parts.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#666">Ничего не найдено</p>';
                 return;
             }
-
             const fragment = document.createDocumentFragment();
-
             parts.forEach(part => {
                 const images = part.images || (part.image ? [part.image] : []);
                 const mainImage = images[0] || '';
-
                 let thumbnailsHtml = '';
                 if (images.length > 1) {
                     thumbnailsHtml = '<div class="thumbnails">';
                     images.forEach(img => {
-                        thumbnailsHtml += `
-                            <img src="${img}" 
-                                 class="thumbnail" 
-                                 loading="lazy"
-                                 onclick="this.closest('.part-card').querySelector('.part-image').src='${img}'" 
-                                 onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%3E%3Crect%20width%3D%2260%22%20height%3D%2260%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Ctext%20x%3D%2210%22%20y%3D%2235%22%20font-family%3D%22Arial%22%20font-size%3D%2212%22%20fill%3D%22%23999%22%3E%D0%BD%D0%B5%D1%82%20%D1%84%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E'">
-                        `;
+                        thumbnailsHtml += `<img src="${img}" class="thumbnail" loading="lazy" onclick="event.stopPropagation(); this.closest('.part-card').querySelector('.part-image').src='${img}'">`;
                     });
                     thumbnailsHtml += '</div>';
                 }
-
                 const card = document.createElement('div');
                 card.className = 'part-card';
+                card.setAttribute('data-part', JSON.stringify(part));
                 card.innerHTML = `
                     <div class="image-container">
-                        <img src="${mainImage}" 
-                             class="part-image" 
-                             alt="${part.name}" 
-                             loading="lazy"
-                             onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22150%22%20viewBox%3D%220%200%20200%20150%22%3E%3Crect%20width%3D%22200%22%20height%3D%22150%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Ctext%20x%3D%2235%22%20y%3D%2280%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23999%22%3E%D0%BD%D0%B5%D1%82%20%D1%84%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                        <img src="${mainImage}" class="part-image" alt="${part.name}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22150%22%20viewBox%3D%220%200%20200%20150%22%3E%3Crect%20width%3D%22200%22%20height%3D%22150%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Ctext%20x%3D%2235%22%20y%3D%2280%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23999%22%3E%D0%BD%D0%B5%D1%82%20%D1%84%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E'">
                     </div>
                     ${thumbnailsHtml}
                     <h3>${part.name}</h3>
                     <p>Артикул: ${part.article}</p>
                     <div class="price">${part.price.toLocaleString('ru-RU')} ₽</div>
                     ${part.notes ? `<div class="part-notes">📝 ${part.notes}</div>` : ''}
-                    <div class="compatibility">
-                        <p>Подходит для:</p>
-                        <div class="part-models">
-                            ${part.compatible.map(code => {
-                                const model = database.models.find(m => m.code === code);
-                                return model ? `<div class="model-chip">${model.name}</div>` : '';
-                            }).join('')}
-                        </div>
+                    <div class="part-models">
+                        ${part.compatible.map(code => {
+                            const model = database.models.find(m => m.code === code);
+                            return model ? `<div class="model-chip">${model.name}</div>` : '';
+                        }).join('')}
                     </div>
+                    <button class="add-to-cart-btn">🛒 Добавить в корзину</button>
                 `;
+                // Обработчик открытия модального окна
+                card.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('add-to-cart-btn')) {
+                        e.stopPropagation();
+                        addToCart(part);
+                    } else {
+                        openProductModal(part);
+                    }
+                });
                 fragment.appendChild(card);
             });
-
             container.appendChild(fragment);
         }
 
-        let filterTimeout;
-        function debouncedFilter() {
-            clearTimeout(filterTimeout);
-            filterTimeout = setTimeout(filterParts, 300);
+        // ==================== ПОДРОБНАЯ КАРТОЧКА ТОВАРА (МОДАЛЬНОЕ ОКНО) ====================
+        function openProductModal(part) {
+            const modal = document.getElementById('productModal');
+            const modalContent = document.getElementById('modalContent');
+            const images = part.images || (part.image ? [part.image] : []);
+            let imageGallery = `<div class="image-container" style="margin-bottom:10px;"><img src="${images[0] || ''}" style="width:100%;" onerror="this.src='data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22200%22%20height%3D%22150%22%20viewBox%3D%220%200%20200%20150%22%3E%3Crect%20width%3D%22200%22%20height%3D%22150%22%20fill%3D%22%23f0f0f0%22%2F%3E%3Ctext%20x%3D%2235%22%20y%3D%2280%22%20font-family%3D%22Arial%22%20font-size%3D%2216%22%20fill%3D%22%23999%22%3E%D0%BD%D0%B5%D1%82%20%D1%84%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E'"></div>`;
+            if (images.length > 1) {
+                imageGallery += '<div class="thumbnails">';
+                images.forEach(img => {
+                    imageGallery += `<img src="${img}" class="thumbnail" style="width:80px;" onclick="document.getElementById('modalMainImage').src='${img}'">`;
+                });
+                imageGallery += '</div>';
+            }
+            modalContent.innerHTML = `
+                <div id="modalMainImageContainer">${imageGallery}</div>
+                <h2>${part.name}</h2>
+                <p><strong>Артикул:</strong> ${part.article}</p>
+                <p><strong>Цена:</strong> ${part.price.toLocaleString('ru-RU')} ₽</p>
+                <p><strong>Категория:</strong> ${part.category}</p>
+                ${part.notes ? `<div class="part-notes">📝 ${part.notes}</div>` : ''}
+                <p><strong>Подходит для:</strong></p>
+                <div class="part-models">
+                    ${part.compatible.map(code => {
+                        const model = database.models.find(m => m.code === code);
+                        return model ? `<div class="model-chip">${model.name}</div>` : '';
+                    }).join('')}
+                </div>
+                <button class="add-to-cart-btn" style="margin-top:20px;">🛒 Добавить в корзину</button>
+            `;
+            modal.style.display = 'block';
+            const addBtn = modalContent.querySelector('.add-to-cart-btn');
+            addBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToCart(part);
+                modal.style.display = 'none';
+            });
+        }
+
+        // ==================== ИНИЦИАЛИЗАЦИЯ ====================
+        function initFilters() {
+            const select = document.getElementById('modelSelect');
+            database.models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.code;
+                option.textContent = model.name;
+                select.appendChild(option);
+            });
         }
 
         function showEngineReference() {
             const container = document.getElementById('engineReference');
-            if (!container) return;
             container.innerHTML = database.engines.map(engine => `
                 <div class="engine-card">
                     <div class="engine-code">Двигатель ${engine.code}</div>
@@ -4357,15 +4782,59 @@
             `).join('');
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initFilters();
-            showEngineReference();
-            document.getElementById('modelSelect').addEventListener('change', filterParts);
-            document.getElementById('categorySelect').addEventListener('change', filterParts);
-            document.getElementById('searchInput').addEventListener('input', debouncedFilter);
-            document.getElementById('refineInput').addEventListener('input', debouncedFilter);
-            filterParts();
+        // Обработка модальных окон
+        const modal = document.getElementById('productModal');
+        const cartModal = document.getElementById('cartModal');
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', () => {
+                modal.style.display = 'none';
+                cartModal.style.display = 'none';
+            });
         });
+        document.getElementById('cartIcon').addEventListener('click', () => {
+            renderCartModal();
+            cartModal.style.display = 'block';
+        });
+        document.getElementById('closeCartModal').addEventListener('click', () => {
+            cartModal.style.display = 'none';
+        });
+        document.getElementById('clearCartBtn').addEventListener('click', clearCart);
+        window.onclick = function(event) {
+            if (event.target === modal) modal.style.display = 'none';
+            if (event.target === cartModal) cartModal.style.display = 'none';
+        };
+
+        // Автодополнение
+        const searchInput = document.getElementById('searchInput');
+        const autocompleteList = document.getElementById('autocompleteList');
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value;
+            showAutocomplete(searchInput, autocompleteList, query);
+        });
+        document.addEventListener('click', (e) => {
+            if (e.target !== searchInput) autocompleteList.style.display = 'none';
+        });
+
+        // Фильтрация с debounce и обновлением URL
+        let filterTimeout;
+        function debouncedFilter() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => {
+                updateURL();
+                filterParts();
+            }, 300);
+        }
+
+        document.getElementById('modelSelect').addEventListener('change', debouncedFilter);
+        document.getElementById('categorySelect').addEventListener('change', debouncedFilter);
+        searchInput.addEventListener('input', debouncedFilter);
+        document.getElementById('refineInput').addEventListener('input', debouncedFilter);
+
+        loadFiltersFromURL();
+        initFilters();
+        showEngineReference();
+        filterParts();
+        updateCartUI();
     </script>
 </body>
 </html>
